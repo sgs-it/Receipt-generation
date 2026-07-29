@@ -1397,7 +1397,8 @@
           doc.line(88, dateY + 4, 300, dateY + 4);
 
           const boxTop = dateY + 20;
-          const boxBottom = PAGE_H - 150;
+          const gap = 35;
+          const boxBottom = boxTop + 35 + (4 * gap) + 25;
           const boxLeft = 50;
           const boxRight = PAGE_W - 60;
           doc.setLineWidth(1);
@@ -1406,7 +1407,6 @@
           const labelX = boxLeft + 20;
           const lineStartX = boxLeft + 190;
           const lineEndX = boxRight - 20;
-          const gap = (boxBottom - boxTop - 50) / 5;
           let y = boxTop + 35;
 
           function field(y, label, value) {
