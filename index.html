@@ -1510,7 +1510,7 @@
               setStatus(`Generating and downloading receipt ${i + 1} of ${included.length}…`, false);
 
               // Create a new PDF for each individual receipt
-              const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+              const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a5' });
 
               const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
                 ? rowData.voucherVal
