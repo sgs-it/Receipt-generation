@@ -1049,6 +1049,7 @@
           { key: 'date', label: 'Date', required: true },
           { key: 'client', label: 'Received from (client)', required: true },
           { key: 'amount', label: 'Amount (Dhs.)', required: true },
+          { key: 'amountWords', label: 'Amount in words', required: false },
           { key: 'invoice', label: 'Invoice / Ref No.', required: false },
           { key: 'comment', label: 'Comments (fallback text)', required: false },
           { key: 'voucher', label: 'Voucher No. column', required: false },
@@ -1071,14 +1072,15 @@
         }
 
         function guessMapping(headers) {
-          const g = { date: -1, client: -1, invoice: -1, amount: -1, comment: -1, voucher: -1 };
+          const g = { date: -1, client: -1, invoice: -1, amount: -1, amountWords: -1, comment: -1, voucher: -1 };
           headers.forEach((h, i) => {
             if (h == null) return;
             const c = String(h).toLowerCase();
             if (g.date === -1 && c.includes('date') && !c.includes('cheque')) g.date = i;
             if (g.client === -1 && (c.includes('client') || c.includes('name of') || c.includes('received from'))) g.client = i;
             if (g.invoice === -1 && (c.includes('inv no') || c.includes('inv.no') || c.includes('invoice') || c === 'inv')) g.invoice = i;
-            if (g.amount === -1 && c.includes('amount') && (c.includes('received') || c.includes('receive'))) g.amount = i;
+            if (g.amountWords === -1 && c.includes('amount') && c.includes('word')) g.amountWords = i;
+            if (g.amount === -1 && c.includes('amount') && !c.includes('word') && (c.includes('received') || c.includes('receive'))) g.amount = i;
             if (g.comment === -1 && c.includes('comment')) g.comment = i;
             if (g.voucher === -1 && (c.includes('voucher') || c.includes('v.no') || c.includes('vch'))) g.voucher = i;
           });
@@ -1240,6 +1242,7 @@
 
             const dateVal = mapping.date >= 0 ? row[mapping.date] : null;
             const amountVal = mapping.amount >= 0 ? row[mapping.amount] : null;
+            const amountWordsVal = mapping.amountWords >= 0 ? row[mapping.amountWords] : null;
             const invoiceVal = mapping.invoice >= 0 ? row[mapping.invoice] : null;
             const commentVal = mapping.comment >= 0 ? row[mapping.comment] : null;
             const voucherVal = mapping.voucher >= 0 ? row[mapping.voucher] : null;
@@ -1251,6 +1254,7 @@
               client: String(clientVal).trim(),
               dateVal,
               amountVal,
+              amountWordsVal,
               invoiceVal,
               commentVal,
               voucherVal,
@@ -1417,7 +1421,25 @@
           }
 
           field(y, 'Received from', data.client); y += gap;
-          field(y, 'Dhs.', data.amountStr); y += gap;
+          
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(11);
+          doc.text('Dhs.', labelX, y);
+          doc.line(lineStartX, y + 4, lineEndX, y + 4);
+          if (data.amountStr) {
+            doc.setFont('helvetica', 'bold');
+            doc.text(String(data.amountStr), lineStartX + 5, y - 2);
+          }
+          if (data.amountWordsVal) {
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            let w = String(data.amountWordsVal).trim();
+            if (!w.toUpperCase().startsWith('AED')) {
+              w = 'AED ' + w;
+            }
+            doc.text(w, labelX + 30, y);
+          }
+          y += gap;
           field(y, 'By Bank/Cheque Transfer', data.method); y += gap;
           field(y, 'Bank/Cheque Transfer Date', data.chequeDate || ''); y += gap;
           field(y, 'Being payment against', data.against);
@@ -1497,6 +1519,7 @@
                 dateStr: todayStr,
                 client: rowData.client,
                 amountStr: amountText(rowData),
+                amountWordsVal: rowData.amountWordsVal,
                 method,
                 chequeDate: formatDate(rowData.dateVal),
                 against: againstText,
