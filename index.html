@@ -1175,7 +1175,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       setStatus('Map at least "Received from" and "Amount" columns first.', true);
       return;
     }
-    setStatus('Generating and zipping ' + included.length + ' receipt(s)…', false);
+    setStatus('Generating ' + included.length + ' receipt(s)…', false);
 
     const company = {
       name: document.getElementById('companyName').value,
@@ -1187,7 +1187,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     let voucherSeq = parseInt(document.getElementById('voucherStart').value, 10) || 1;
 
     const { jsPDF } = window.jspdf;
-    const zip = new JSZip();
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
 
     // Use an async loop to avoid freezing the browser when generating many receipts
     for (let i = 0; i < included.length; i++) {
@@ -1198,12 +1198,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         setStatus(`Generating receipt ${i + 1} of ${included.length}…`, false);
         await new Promise(r => setTimeout(r, 10)); // tiny delay allows UI to repaint
       }
-      
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+
+      if (i > 0) doc.addPage();
       const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
         ? rowData.voucherVal
         : voucherSeq++;
-        
       drawReceipt(doc, {
         voucherNo,
         dateStr: formatDate(rowData.dateVal),
@@ -1212,22 +1211,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         method,
         against: paymentAgainstText(rowData),
       }, company);
-
-      const pdfData = doc.output('arraybuffer');
-      const safeClientName = String(rowData.client || 'Unknown').replace(/[^a-zA-Z0-9]/gi, '_');
-      const pdfName = 'Receipt_' + voucherNo + '_' + safeClientName + '.pdf';
-      zip.file(pdfName, pdfData);
     }
 
-    const fname = 'Receipt_Vouchers_' + (state.sheetName || 'export').replace(/[^a-z0-9\-]/gi,'_') + '.zip';
+    const fname = 'Receipt_Vouchers_' + (state.sheetName || 'export').replace(/[^a-z0-9\-]/gi,'_') + '.pdf';
 
     try {
-      setStatus(`Zipping ${included.length} receipts (this will be fast)...`, false);
-      await new Promise(r => setTimeout(r, 10));
-      
-      // Use STORE compression since PDF files are already compressed internally.
-      // This reduces zip generation time for 80+ files from ~15s to ~0.1s.
-      const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
       if (state.lastObjectUrl) URL.revokeObjectURL(state.lastObjectUrl);
       state.lastObjectUrl = url;
