@@ -1413,10 +1413,14 @@
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(11);
             doc.text(label, labelX, y);
-            doc.line(lineStartX, y + 4, lineEndX, y + 4);
+            
+            let labelWidth = doc.getTextWidth(label);
+            let customLineStartX = labelX + labelWidth + 15;
+            
+            doc.line(customLineStartX, y + 4, lineEndX, y + 4);
             if (value) {
               doc.setFont('helvetica', 'bold');
-              doc.text(String(value), lineStartX + 5, y - 2);
+              doc.text(String(value), customLineStartX + 5, y - 2);
             }
           }
 
