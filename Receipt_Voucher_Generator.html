@@ -1371,9 +1371,9 @@
           // contains the "Italian Planters" wordmark and tagline, so we don't
           // duplicate that text on the left of the receipt.
           if (COMPANY_LOGO_BASE64) {
-            const logoW = 110;
+            const logoW = 165;
             const logoH = logoW * (226 / 501); 
-            const logoX = PAGE_W - 42 - logoW - 10;
+            const logoX = PAGE_W - 42 - logoW - 20;
             const logoY = 50;
             doc.addImage(COMPANY_LOGO_BASE64, 'PNG', logoX, logoY, logoW, logoH);
           }
@@ -1464,24 +1464,26 @@
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(10);
           
-          doc.text('Received by', boxLeft, footY);
-          doc.line(boxLeft, footY - 15, boxLeft + 80, footY - 15);
+          let widthThird = (boxRight - boxLeft) / 3;
+          
+          doc.text('Received by', boxLeft + 15, footY);
+          doc.line(boxLeft + 15, footY - 15, boxLeft + 150, footY - 15);
 
-          const midX = boxLeft + 105;
+          let midX = boxLeft + widthThird + 15;
           doc.text('Prepared by', midX, footY);
           if (PREPARED_SIG_BASE64) {
-            const sigW = 80, sigH = 22;
+            const sigW = 110, sigH = 30;
             doc.addImage(PREPARED_SIG_BASE64, 'PNG', midX, footY - 15 - sigH, sigW, sigH);
           }
-          doc.line(midX, footY - 15, midX + 80, footY - 15);
+          doc.line(midX, footY - 15, midX + 135, footY - 15);
 
-          const endX = boxLeft + 210;
+          let endX = boxRight - 165;
           doc.text('Approved by', endX, footY);
           if (APPROVED_SIG_BASE64) {
-            const sigW2 = 80, sigH2 = 22;
+            const sigW2 = 120, sigH2 = 30;
             doc.addImage(APPROVED_SIG_BASE64, 'PNG', endX, footY - 15 - sigH2, sigW2, sigH2);
           }
-          doc.line(endX, footY - 15, endX + 80, footY - 15);
+          doc.line(endX, footY - 15, boxRight - 30, footY - 15);
         }
 
         els.generateBtn.addEventListener('click', async () => {
@@ -1515,7 +1517,7 @@
               setStatus(`Generating and downloading receipt ${i + 1} of ${included.length}…`, false);
 
               // Create a new PDF for each individual receipt
-              const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a5' });
+              const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a5' });
 
               const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
                 ? rowData.voucherVal
