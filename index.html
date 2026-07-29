@@ -1358,7 +1358,7 @@
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
           
-          let addressLines = doc.splitTextToSize(company.address, PAGE_W - 40);
+          let addressLines = doc.splitTextToSize(company.address, PAGE_W - 220);
           let currentHeaderY = 30;
           for (let i = 0; i < addressLines.length; i++) {
             doc.text(addressLines[i], PAGE_W / 2, currentHeaderY, { align: 'center' });
@@ -1371,10 +1371,10 @@
           // contains the "Italian Planters" wordmark and tagline, so we don't
           // duplicate that text on the left of the receipt.
           if (COMPANY_LOGO_BASE64) {
-            const logoW = 165;
+            const logoW = 125;
             const logoH = logoW * (226 / 501); 
-            const logoX = PAGE_W - 42 - logoW - 20;
-            const logoY = 25;
+            const logoX = PAGE_W - 42 - logoW - 15;
+            const logoY = 20;
             doc.addImage(COMPANY_LOGO_BASE64, 'PNG', logoX, logoY, logoW, logoH);
           }
 
@@ -1460,7 +1460,7 @@
           doc.setLineWidth(1);
           doc.rect(boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
 
-          const footY = boxBottom + 45;
+          const footY = boxBottom + 55;
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(10);
           
@@ -1472,7 +1472,7 @@
           let midX = boxLeft + widthThird + 15;
           doc.text('Prepared by', midX, footY);
           if (PREPARED_SIG_BASE64) {
-            const sigW = 110, sigH = 30;
+            const sigW = 90, sigH = 25;
             doc.addImage(PREPARED_SIG_BASE64, 'PNG', midX, footY - 15 - sigH, sigW, sigH);
           }
           doc.line(midX, footY - 15, midX + 135, footY - 15);
@@ -1480,7 +1480,7 @@
           let endX = boxRight - 165;
           doc.text('Approved by', endX, footY);
           if (APPROVED_SIG_BASE64) {
-            const sigW2 = 120, sigH2 = 30;
+            const sigW2 = 90, sigH2 = 25;
             doc.addImage(APPROVED_SIG_BASE64, 'PNG', endX, footY - 15 - sigH2, sigW2, sigH2);
           }
           doc.line(endX, footY - 15, boxRight - 30, footY - 15);
