@@ -1187,71 +1187,61 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     let voucherSeq = parseInt(document.getElementById('voucherStart').value, 10) || 1;
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
-
-    // Use an async loop to avoid freezing the browser when generating many receipts
-    for (let i = 0; i < included.length; i++) {
-      const rowData = included[i];
-      
-      // Update the UI and yield to the main thread every few receipts so the browser doesn't freeze
-      if (i % 3 === 0) {
-        setStatus(`Generating receipt ${i + 1} of ${included.length}…`, false);
-        await new Promise(r => setTimeout(r, 10)); // tiny delay allows UI to repaint
-      }
-
-      if (i > 0) doc.addPage();
-      const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
-        ? rowData.voucherVal
-        : voucherSeq++;
-      const today = new Date();
-      const todayStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
-      
-      let againstText = paymentAgainstText(rowData);
-      if (againstText && againstText.toUpperCase().includes('PLEASE CONFIRM INVOICE NUMBERS')) {
-        againstText = 'LANDSCAPING MAINTANENCE INVOICE';
-      }
-      
-      drawReceipt(doc, {
-        voucherNo,
-        dateStr: todayStr,
-        client: rowData.client,
-        amountStr: amountText(rowData),
-        method,
-        chequeDate: formatDate(rowData.dateVal),
-        against: againstText,
-      }, company);
-    }
-
-    const fname = 'Receipt_Vouchers_' + (state.sheetName || 'export').replace(/[^a-z0-9\-]/gi,'_') + '.pdf';
 
     try {
-      const blob = doc.output('blob');
-      const url = URL.createObjectURL(blob);
-      if (state.lastObjectUrl) URL.revokeObjectURL(state.lastObjectUrl);
-      state.lastObjectUrl = url;
-
-      const link = document.getElementById('downloadLink');
-      link.href = url;
-      link.download = fname;
-      link.textContent = 'Download ' + fname;
-      link.classList.remove('hidden');
-
-      // Try to trigger an automatic download too; harmless if blocked.
-      let autoDownloaded = false;
-      try {
+      // Use an async loop to avoid freezing the browser when generating many receipts
+      for (let i = 0; i < included.length; i++) {
+        const rowData = included[i];
+        
+        setStatus(`Generating and downloading receipt ${i + 1} of ${included.length}…`, false);
+        
+        // Create a new PDF for each individual receipt
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+        
+        const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
+          ? rowData.voucherVal
+          : voucherSeq++;
+        const today = new Date();
+        const todayStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
+        
+        let againstText = paymentAgainstText(rowData);
+        if (againstText && againstText.toUpperCase().includes('PLEASE CONFIRM INVOICE NUMBERS')) {
+          againstText = 'LANDSCAPING MAINTANENCE INVOICE';
+        }
+        
+        drawReceipt(doc, {
+          voucherNo,
+          dateStr: todayStr,
+          client: rowData.client,
+          amountStr: amountText(rowData),
+          method,
+          chequeDate: formatDate(rowData.dateVal),
+          against: againstText,
+        }, company);
+        
+        const safeClientName = String(rowData.client || 'Unknown').replace(/[^a-zA-Z0-9]/gi, '_');
+        const fname = 'Receipt_' + voucherNo + '_' + safeClientName + '.pdf';
+        
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        
+        // Trigger automatic download
         const a = document.createElement('a');
         a.href = url; a.download = fname;
-        document.body.appendChild(a); a.click(); a.remove();
-        autoDownloaded = true;
-      } catch (e) { /* ignored — manual link below still works */ }
-
-      setStatus(autoDownloaded
-        ? ('Done — ' + included.length + ' receipt(s) generated. If the download didn\'t start, click "Download ' + fname + '" above.')
-        : ('Done — ' + included.length + ' receipt(s) generated. Click "Download ' + fname + '" above to save.'),
-        false, true);
+        document.body.appendChild(a); 
+        a.click(); 
+        a.remove();
+        
+        // Yield to the main thread and give the browser time to process the download
+        await new Promise(r => setTimeout(r, 200)); 
+      }
+      
+      setStatus(`Finished! ${included.length} receipt(s) downloaded. Check your Downloads folder. (Make sure you allow multiple downloads if your browser asks).`, false);
+      document.getElementById('downloadLink').classList.add('hidden');
+      
     } catch (err) {
       console.error(err);
-      setStatus('Something went wrong generating the PDF: ' + err.message, true);
+      setStatus('Something went wrong generating the PDFs: ' + err.message, true);
     }
   });
 
