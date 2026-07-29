@@ -1425,10 +1425,14 @@
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(11);
           doc.text('Dhs.', labelX, y);
-          doc.line(lineStartX, y + 4, lineEndX, y + 4);
+          
+          let currentX = labelX + 35;
+          doc.line(currentX, y + 4, lineEndX, y + 4);
+          
           if (data.amountStr) {
             doc.setFont('helvetica', 'bold');
-            doc.text(String(data.amountStr), lineStartX + 5, y - 2);
+            doc.text(String(data.amountStr), currentX + 5, y - 2);
+            currentX += doc.getTextWidth(String(data.amountStr)) + 15;
           }
           if (data.amountWordsVal) {
             doc.setFont('helvetica', 'bold');
@@ -1437,7 +1441,8 @@
             if (!w.toUpperCase().startsWith('AED')) {
               w = 'AED ' + w;
             }
-            doc.text(w, labelX + 30, y);
+            w = '(' + w + ')';
+            doc.text(w, currentX, y - 2);
           }
           y += gap;
           field(y, 'By Bank/Cheque Transfer', data.method); y += gap;
