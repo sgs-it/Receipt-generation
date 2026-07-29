@@ -1357,8 +1357,15 @@
 
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
-          doc.text(company.address, PAGE_W / 2, 30, { align: 'center' });
-          doc.text(company.website, PAGE_W / 2, 43, { align: 'center' });
+          
+          let addressLines = doc.splitTextToSize(company.address, PAGE_W - 40);
+          let currentHeaderY = 30;
+          for (let i = 0; i < addressLines.length; i++) {
+            doc.text(addressLines[i], PAGE_W / 2, currentHeaderY, { align: 'center' });
+            currentHeaderY += 13;
+          }
+          
+          doc.text(company.website, PAGE_W / 2, currentHeaderY, { align: 'center' });
 
           // Company logo — right side of the header. The logo artwork already
           // contains the "Italian Planters" wordmark and tagline, so we don't
