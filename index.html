@@ -1374,11 +1374,11 @@
             const logoW = 165;
             const logoH = logoW * (226 / 501); 
             const logoX = PAGE_W - 42 - logoW - 20;
-            const logoY = 50;
+            const logoY = 25;
             doc.addImage(COMPANY_LOGO_BASE64, 'PNG', logoX, logoY, logoW, logoH);
           }
 
-          const tabX = PAGE_W - 42, tabW = 30, tabY0 = 90, tabY1 = PAGE_H - 120;
+          const tabX = PAGE_W - 42, tabW = 30, tabY0 = 60, tabY1 = PAGE_H - 80;
           doc.setFillColor(...GREY);
           doc.rect(tabX, tabY0, tabW, tabY1 - tabY0, 'F');
           doc.setTextColor(255, 255, 255);
@@ -1390,26 +1390,26 @@
 
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(11);
-          const topY = 100;
+          const topY = 80;
           doc.text('No.', 50, topY);
           doc.setFont('helvetica', 'bold');
           doc.text(String(data.voucherNo || ''), 85, topY);
           doc.line(80, topY + 4, 220, topY + 4);
 
-          const dateY = topY + 45;
+          const dateY = topY + 30;
           doc.setFont('helvetica', 'normal');
           doc.text('Date.', 50, dateY);
           doc.setFont('helvetica', 'bold');
           doc.text(data.dateStr || '', 95, dateY);
           doc.line(88, dateY + 4, 300, dateY + 4);
 
-          const boxTop = dateY + 20;
+          const boxTop = dateY + 15;
           const boxLeft = 50;
           const boxRight = PAGE_W - 60;
           
           const labelX = boxLeft + 20;
           const lineEndX = boxRight - 20;
-          let y = boxTop + 35;
+          let y = boxTop + 25;
 
           function drawFieldText(startY, label, valStr) {
              doc.setFont('helvetica', 'normal');
@@ -1434,13 +1434,13 @@
                     doc.text(lines[i], customLineStartX + 5, currentY - 2);
                 }
                 if (i < lines.length - 1) {
-                    currentY += 25; // drop down for next line
+                    currentY += 22; // drop down for next line
                 }
              }
              return currentY;
           }
 
-          y = drawFieldText(y, 'Received from', data.client) + 35;
+          y = drawFieldText(y, 'Received from', data.client) + 28;
           
           let text1 = data.amountStr ? String(data.amountStr) : '';
           let text2 = '';
@@ -1451,16 +1451,16 @@
           }
           let fullAmount = text1 + (text1 && text2 ? '  ' : '') + text2;
           
-          y = drawFieldText(y, 'Dhs.', fullAmount) + 35;
-          y = drawFieldText(y, 'By Bank/Cheque Transfer', data.method) + 35;
-          y = drawFieldText(y, 'Bank/Cheque Transfer Date', data.chequeDate || '') + 35;
+          y = drawFieldText(y, 'Dhs.', fullAmount) + 28;
+          y = drawFieldText(y, 'By Bank/Cheque Transfer', data.method) + 28;
+          y = drawFieldText(y, 'Bank/Cheque Transfer Date', data.chequeDate || '') + 28;
           y = drawFieldText(y, 'Being payment against', data.against);
           
-          const boxBottom = y + 25;
+          const boxBottom = y + 20;
           doc.setLineWidth(1);
           doc.rect(boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
 
-          const footY = boxBottom + 55;
+          const footY = boxBottom + 45;
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(10);
           
