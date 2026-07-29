@@ -1165,7 +1165,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     doc.line(boxRight-165, footY-15, boxRight-30, footY-15);
   }
 
-  els.generateBtn.addEventListener('click', () => {
+  els.generateBtn.addEventListener('click', async () => {
     const included = state.rows.filter(r => r.included);
     if (included.length === 0){
       setStatus('Select at least one row first.', true);
@@ -1175,7 +1175,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       setStatus('Map at least "Received from" and "Amount" columns first.', true);
       return;
     }
-    setStatus('Generating ' + included.length + ' receipt(s)…', false);
+    setStatus('Generating and zipping ' + included.length + ' receipt(s)…', false);
 
     const company = {
       name: document.getElementById('companyName').value,
@@ -1187,10 +1187,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     let voucherSeq = parseInt(document.getElementById('voucherStart').value, 10) || 1;
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+    const zip = new JSZip();
 
     included.forEach((rowData, i) => {
-      if (i > 0) doc.addPage();
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
       const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
         ? rowData.voucherVal
         : voucherSeq++;
@@ -1202,12 +1202,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         method,
         against: paymentAgainstText(rowData),
       }, company);
+
+      const pdfData = doc.output('arraybuffer');
+      const safeClientName = String(rowData.client || 'Unknown').replace(/[^a-zA-Z0-9]/gi, '_');
+      const pdfName = 'Receipt_' + voucherNo + '_' + safeClientName + '.pdf';
+      zip.file(pdfName, pdfData);
     });
 
-    const fname = 'Receipt_Vouchers_' + (state.sheetName || 'export').replace(/[^a-z0-9\-]/gi,'_') + '.pdf';
+    const fname = 'Receipt_Vouchers_' + (state.sheetName || 'export').replace(/[^a-z0-9\-]/gi,'_') + '.zip';
 
     try {
-      const blob = doc.output('blob');
+      const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       if (state.lastObjectUrl) URL.revokeObjectURL(state.lastObjectUrl);
       state.lastObjectUrl = url;
