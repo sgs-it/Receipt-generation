@@ -1135,8 +1135,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
     field(y, 'Received from', data.client); y += gap;
     field(y, 'Dhs.', data.amountStr); y += gap;
-    field(y, 'By Cash/Cheque No.', data.method); y += gap;
-    field(y, 'Cheque Date', data.chequeDate || ''); y += gap;
+    field(y, 'By Bank/Cheque Transfer', data.method); y += gap;
+    field(y, 'Bank/Cheque Transfer Date', data.chequeDate || ''); y += gap;
     field(y, 'Being payment against', data.against);
 
     // footY is the label baseline; signatures sit above the underline (footY-15)
@@ -1203,13 +1203,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       const voucherNo = (rowData.voucherVal != null && rowData.voucherVal !== '')
         ? rowData.voucherVal
         : voucherSeq++;
+      const today = new Date();
+      const todayStr = String(today.getDate()).padStart(2, '0') + '/' + String(today.getMonth() + 1).padStart(2, '0') + '/' + today.getFullYear();
+      
       drawReceipt(doc, {
         voucherNo,
-        dateStr: formatDate(rowData.dateVal),
+        dateStr: todayStr,
         client: rowData.client,
         amountStr: amountText(rowData),
         method,
-        against: paymentAgainstText(rowData),
+        chequeDate: formatDate(rowData.dateVal),
+        against: "LANDSCAPING MAINTANENCE INVOICE",
       }, company);
     }
 
