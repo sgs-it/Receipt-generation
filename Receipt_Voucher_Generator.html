@@ -1364,9 +1364,9 @@
           // contains the "Italian Planters" wordmark and tagline, so we don't
           // duplicate that text on the left of the receipt.
           if (COMPANY_LOGO_BASE64) {
-            const logoW = 165;
-            const logoH = logoW * (226 / 501); // native aspect ratio of the logo artwork
-            const logoX = PAGE_W - 42 - logoW - 20; // sits left of the grey side tab
+            const logoW = 110;
+            const logoH = logoW * (226 / 501); 
+            const logoX = PAGE_W - 42 - logoW - 10;
             const logoY = 50;
             doc.addImage(COMPANY_LOGO_BASE64, 'PNG', logoX, logoY, logoW, logoH);
           }
@@ -1397,49 +1397,43 @@
           doc.line(88, dateY + 4, 300, dateY + 4);
 
           const boxTop = dateY + 20;
-          const boxBottom = PAGE_H - 150;
           const boxLeft = 50;
           const boxRight = PAGE_W - 60;
-          doc.setLineWidth(1);
-          doc.rect(boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
-
+          
           const labelX = boxLeft + 20;
-          const lineStartX = boxLeft + 190;
           const lineEndX = boxRight - 20;
-          const gap = (boxBottom - boxTop - 50) / 5;
           let y = boxTop + 35;
 
-          function field(y, label, value) {
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(11);
-            doc.text(label, labelX, y);
-            
-            let labelWidth = doc.getTextWidth(label);
-            let customLineStartX = labelX + labelWidth + 15;
-            
-            doc.line(customLineStartX, y + 4, lineEndX, y + 4);
-            if (value) {
-              doc.setFont('helvetica', 'bold');
-              let valStr = String(value);
-              doc.setFontSize(11);
-              let valWidth = doc.getTextWidth(valStr);
-              let space = lineEndX - (customLineStartX + 5);
-              if (valWidth > space && space > 0) {
-                let scale = space / valWidth;
-                doc.setFontSize(Math.max(11 * scale, 5));
-              }
-              doc.text(valStr, customLineStartX + 5, y - 2);
-            }
+          function drawFieldText(startY, label, valStr) {
+             doc.setFont('helvetica', 'normal');
+             doc.setFontSize(11);
+             doc.text(label, labelX, startY);
+             
+             let labelWidth = doc.getTextWidth(label);
+             let customLineStartX = labelX + labelWidth + 15;
+             if (label === 'Dhs.') customLineStartX = labelX + 35;
+             
+             let maxW = lineEndX - (customLineStartX + 5);
+             
+             doc.setFont('helvetica', 'bold');
+             doc.setFontSize(11);
+             let lines = doc.splitTextToSize(String(valStr || ''), maxW);
+             if (!lines || lines.length === 0) lines = [''];
+             
+             let currentY = startY;
+             for (let i = 0; i < lines.length; i++) {
+                doc.line(customLineStartX, currentY + 4, lineEndX, currentY + 4);
+                if (lines[i]) {
+                    doc.text(lines[i], customLineStartX + 5, currentY - 2);
+                }
+                if (i < lines.length - 1) {
+                    currentY += 25; // drop down for next line
+                }
+             }
+             return currentY;
           }
 
-          field(y, 'Received from', data.client); y += gap;
-          
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(11);
-          doc.text('Dhs.', labelX, y);
-          
-          let currentX = labelX + 35;
-          doc.line(currentX, y + 4, lineEndX, y + 4);
+          y = drawFieldText(y, 'Received from', data.client) + 35;
           
           let text1 = data.amountStr ? String(data.amountStr) : '';
           let text2 = '';
@@ -1448,59 +1442,39 @@
             if (!w.toUpperCase().startsWith('AED')) w = 'AED ' + w;
             text2 = '(' + w + ')';
           }
+          let fullAmount = text1 + (text1 && text2 ? '  ' : '') + text2;
+          
+          y = drawFieldText(y, 'Dhs.', fullAmount) + 35;
+          y = drawFieldText(y, 'By Bank/Cheque Transfer', data.method) + 35;
+          y = drawFieldText(y, 'Bank/Cheque Transfer Date', data.chequeDate || '') + 35;
+          y = drawFieldText(y, 'Being payment against', data.against);
+          
+          const boxBottom = y + 25;
+          doc.setLineWidth(1);
+          doc.rect(boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
 
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(11);
-          let w1 = text1 ? doc.getTextWidth(text1) : 0;
-          doc.setFontSize(10);
-          let w2 = text2 ? doc.getTextWidth(text2) : 0;
-          let totalW = w1 + (text1 && text2 ? 10 : 0) + w2;
-
-          let amountSpace = lineEndX - (currentX + 5);
-          let scale = 1;
-          if (totalW > amountSpace && amountSpace > 0) {
-             scale = amountSpace / totalW;
-          }
-
-          let drawX = currentX + 5;
-          if (text1) {
-             doc.setFontSize(11 * scale);
-             doc.text(text1, drawX, y - 2);
-             drawX += doc.getTextWidth(text1) + (10 * scale);
-          }
-          if (text2) {
-             doc.setFontSize(10 * scale);
-             doc.text(text2, drawX, y - 2);
-          }
-          y += gap;
-          field(y, 'By Bank/Cheque Transfer', data.method); y += gap;
-          field(y, 'Bank/Cheque Transfer Date', data.chequeDate || ''); y += gap;
-          field(y, 'Being payment against', data.against);
-
-          // footY is the label baseline; signatures sit above the underline (footY-15)
-          // and the whole footer is pushed well below boxBottom so nothing overlaps the box.
           const footY = boxBottom + 55;
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(10);
-          doc.text('Received by', boxLeft + 15, footY);
-          doc.line(boxLeft + 15, footY - 15, boxLeft + 150, footY - 15);
+          
+          doc.text('Received by', boxLeft, footY);
+          doc.line(boxLeft, footY - 15, boxLeft + 80, footY - 15);
 
-          const midX = (boxLeft + boxRight) / 2 - 45;
+          const midX = boxLeft + 105;
           doc.text('Prepared by', midX, footY);
           if (PREPARED_SIG_BASE64) {
-            const sigW = 110, sigH = 30;
+            const sigW = 80, sigH = 22;
             doc.addImage(PREPARED_SIG_BASE64, 'PNG', midX, footY - 15 - sigH, sigW, sigH);
           }
-          // Draw line AFTER image so white background doesn't hide it
-          doc.line(midX, footY - 15, midX + 135, footY - 15);
+          doc.line(midX, footY - 15, midX + 80, footY - 15);
 
-          doc.text('Approved by', boxRight - 165, footY);
+          const endX = boxLeft + 210;
+          doc.text('Approved by', endX, footY);
           if (APPROVED_SIG_BASE64) {
-            const sigW2 = 120, sigH2 = 30;
-            doc.addImage(APPROVED_SIG_BASE64, 'PNG', boxRight - 165, footY - 15 - sigH2, sigW2, sigH2);
+            const sigW2 = 80, sigH2 = 22;
+            doc.addImage(APPROVED_SIG_BASE64, 'PNG', endX, footY - 15 - sigH2, sigW2, sigH2);
           }
-          // Draw line AFTER image so white background doesn't hide it
-          doc.line(boxRight - 165, footY - 15, boxRight - 30, footY - 15);
+          doc.line(endX, footY - 15, endX + 80, footY - 15);
         }
 
         els.generateBtn.addEventListener('click', async () => {
