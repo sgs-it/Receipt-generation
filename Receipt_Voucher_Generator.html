@@ -1358,31 +1358,6 @@
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
           
-          let rawAddress = company.address || '';
-          let addressLines = [];
-          
-          let emailMatch = rawAddress.match(/e-?mail:\s*/i);
-          if (emailMatch) {
-             let idx = emailMatch.index;
-             let part1 = rawAddress.substring(0, idx).replace(/,\s*$/, '').trim();
-             let part2 = rawAddress.substring(idx).trim();
-             
-             let splitPart1 = doc.splitTextToSize(part1, PAGE_W - 220);
-             addressLines.push(...splitPart1);
-             
-             let splitPart2 = doc.splitTextToSize(part2, PAGE_W - 220);
-             addressLines.push(...splitPart2);
-          } else {
-             addressLines = doc.splitTextToSize(rawAddress, PAGE_W - 220);
-          }
-          
-          let currentHeaderY = 30;
-          for (let i = 0; i < addressLines.length; i++) {
-            doc.text(addressLines[i], PAGE_W / 2, currentHeaderY, { align: 'center' });
-            currentHeaderY += 13;
-          }
-          doc.text(company.website, PAGE_W / 2, currentHeaderY, { align: 'center' });
-
           // Company logo — right side of the header. The logo artwork already
           // contains the "Italian Planters" wordmark and tagline, so we don't
           // duplicate that text on the left of the receipt.
@@ -1393,6 +1368,31 @@
             const logoY = 20;
             doc.addImage(COMPANY_LOGO_BASE64, 'PNG', logoX, logoY, logoW, logoH);
           }
+
+          let rawAddress = company.address || '';
+          let addressLines = [];
+          
+          let emailMatch = rawAddress.match(/e-?mail:\s*/i);
+          if (emailMatch) {
+             let idx = emailMatch.index;
+             let part1 = rawAddress.substring(0, idx).replace(/,\s*$/, '').trim();
+             let part2 = rawAddress.substring(idx).trim();
+             
+             let splitPart1 = doc.splitTextToSize(part1, PAGE_W - 40);
+             addressLines.push(...splitPart1);
+             
+             let splitPart2 = doc.splitTextToSize(part2, PAGE_W - 40);
+             addressLines.push(...splitPart2);
+          } else {
+             addressLines = doc.splitTextToSize(rawAddress, PAGE_W - 40);
+          }
+          
+          let currentHeaderY = 30;
+          for (let i = 0; i < addressLines.length; i++) {
+            doc.text(addressLines[i], PAGE_W / 2, currentHeaderY, { align: 'center' });
+            currentHeaderY += 13;
+          }
+          doc.text(company.website, PAGE_W / 2, currentHeaderY, { align: 'center' });
 
           const tabX = PAGE_W - 42, tabW = 30, tabY0 = 60, tabY1 = PAGE_H - 80;
           doc.setFillColor(...GREY);
